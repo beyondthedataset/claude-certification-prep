@@ -5,7 +5,7 @@ import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
   title: 'Claude Certification Guide — Free Mock Exams & Study Guides',
-  description: 'Exam-realistic mock exams, 134 verified practice questions, scoring, and study guides for Anthropic Claude Certified Architect (Foundations) CCAR-F.',
+  description: 'Exam-realistic mock exams, 574 verified practice questions across 2 question banks, 30 official subdomains, scoring, and study guides for Anthropic Claude Certified Architect (Foundations) CCAR-F.',
   keywords: [
     'Claude certification',
     'Claude Certified Architect',

@@ -400,7 +400,7 @@ export async function getTeamLeaderboard(): Promise<TeamMemberStats[]> {
     const mocksTaken = userAttempts.length;
     const bestMockScore = mocksTaken > 0 ? Math.max(...userAttempts.map(a => Number(a.scorePct))) : 0;
     
-    const volumeScore = Math.min(100, Math.round((questionsPracticed / 134) * 100));
+    const volumeScore = Math.min(100, Math.round((questionsPracticed / 574) * 100));
     const readinessPct = Math.round((volumeScore * 0.35) + (accuracyPct * 0.3) + (bestMockScore * 0.35));
 
     statsList.push({

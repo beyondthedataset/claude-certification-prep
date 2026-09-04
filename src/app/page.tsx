@@ -37,7 +37,7 @@ export default function HomePage() {
           <div className="inline-flex items-center gap-2 mb-6 px-3.5 py-1.5 bg-surface-high rounded-full border border-border border-l-2 border-l-primary shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="font-mono text-3xs text-primary uppercase tracking-widest font-semibold">
-              Claude Certified Architect (Foundations) · CCA-F / CCAR-F
+              Claude Certified Architect (Foundations) · 574 Questions Across 2 Banks
             </span>
           </div>
 
@@ -46,7 +46,7 @@ export default function HomePage() {
           </h1>
 
           <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-normal">
-            Sit a timed, exam-realistic mock before you book the real thing, with all 134 verified actual exam questions, 60+ practitioner discussions, and full team progress analytics.
+            Sit a timed, exam-realistic mock before you book the real thing, with 574 verified questions across CertSafari &amp; ExamTopics, 30 official subdomains, deep per-option rationales, and full team progress analytics.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4">
@@ -61,16 +61,18 @@ export default function HomePage() {
               href="/learn"
               className="inline-flex items-center justify-center whitespace-nowrap rounded-sm text-sm font-medium border border-border bg-surface-card hover:bg-surface-high text-foreground h-12 px-8 text-base transition-all"
             >
-              Explore 134 Question Bank
+              Explore 574 Question Bank
             </a>
           </div>
 
           <div className="mt-12 flex flex-wrap justify-center items-center gap-6 pt-8 border-t border-border/40 font-mono text-2xs text-muted-foreground uppercase tracking-widest">
-            <span>134 Questions</span>
+            <span>574 Questions</span>
+            <span>·</span>
+            <span>2 Question Banks</span>
+            <span>·</span>
+            <span>30 Subdomains</span>
             <span>·</span>
             <span>60-Question Mock</span>
-            <span>·</span>
-            <span>5 Exam Domains</span>
             <span>·</span>
             <span>Team Leaderboard</span>
           </div>

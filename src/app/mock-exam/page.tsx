@@ -1,16 +1,26 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { DOMAINS } from '@/lib/questions-data';
+import { DOMAINS, QUESTIONS_DATA } from '@/lib/questions-data';
+import { QuestionBank } from '@/lib/types';
+import BankSelector from '@/components/BankSelector';
 import { Award, Clock, CheckCircle2, ShieldCheck, Zap, BookOpen, ArrowRight } from 'lucide-react';
 
 export default function MockExamHubPage() {
   const router = useRouter();
+  const [selectedBank, setSelectedBank] = useState<QuestionBank>('all');
 
   const handleStartExam = (type: 'full' | 'quick' | 'domain', domainKey?: string) => {
-    let url = `/mock-exam/session?type=${type}`;
+    let url = `/mock-exam/session?type=${type}&bank=${selectedBank}`;
     if (domainKey) url += `&domain=${domainKey}`;
     router.push(url);
+  };
+
+  const poolCounts = {
+    all: QUESTIONS_DATA.length,
+    certsafari: QUESTIONS_DATA.filter(q => q.source === 'certsafari').length,
+    examtopics: QUESTIONS_DATA.filter(q => q.source === 'examtopics').length,
   };
 
   return (
@@ -18,7 +28,7 @@ export default function MockExamHubPage() {
       {/* Hero */}
       <div className="text-center max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full bg-surface-high border border-border border-l-2 border-l-primary font-mono text-3xs text-primary uppercase tracking-widest font-semibold">
-          Anthropic Exam Simulation Engine
+          Anthropic Exam Simulation Engine · 574 Questions
         </div>
         <h1 className="font-headline text-3xl md:text-5xl font-extrabold text-foreground tracking-tight">
           Claude Certified Architect Mock Exams
@@ -26,6 +36,15 @@ export default function MockExamHubPage() {
         <p className="text-muted-foreground text-sm md:text-base mt-3 leading-relaxed">
           Prepare under real exam conditions with full timer pacing, 5-domain weighted questions, question flagging, and instant diagnostic score reports.
         </p>
+      </div>
+
+      {/* Question Bank Selection Pill Bar */}
+      <div className="max-w-3xl mx-auto w-full">
+        <BankSelector
+          selectedBank={selectedBank}
+          onSelectBank={setSelectedBank}
+          counts={poolCounts}
+        />
       </div>
 
       {/* Main Exam Modes */}

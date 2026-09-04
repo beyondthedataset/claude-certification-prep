@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { QUESTIONS_DATA } from '@/lib/questions-data';
-import { Question, DomainKey } from '@/lib/types';
+import { Question, DomainKey, QuestionBank } from '@/lib/types';
 import QuestionCard from '@/components/QuestionCard';
 import ExamTimer from '@/components/ExamTimer';
 import ExamGridNavigator from '@/components/ExamGridNavigator';
@@ -14,6 +14,7 @@ function LiveExamSessionContent() {
   const searchParams = useSearchParams();
   const examType = (searchParams.get('type') as 'full' | 'quick' | 'domain') || 'quick';
   const domainKey = searchParams.get('domain') as DomainKey | null;
+  const bankParam = (searchParams.get('bank') as QuestionBank) || 'all';
 
   const [examQuestions, setExamQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -26,6 +27,9 @@ function LiveExamSessionContent() {
   // Initialize questions
   useEffect(() => {
     let pool = [...QUESTIONS_DATA];
+    if (bankParam && bankParam !== 'all') {
+      pool = pool.filter(q => q.source === bankParam);
+    }
     if (examType === 'domain' && domainKey) {
       pool = pool.filter(q => q.domain === domainKey);
     }
@@ -34,7 +38,7 @@ function LiveExamSessionContent() {
     const shuffled = [...pool].sort(() => 0.5 - Math.random());
     const count = examType === 'full' ? 60 : examType === 'quick' ? 25 : Math.min(pool.length, 30);
     setExamQuestions(shuffled.slice(0, count));
-  }, [examType, domainKey]);
+  }, [examType, domainKey, bankParam]);
 
   const totalQuestions = examQuestions.length;
   const currentQuestion = examQuestions[currentIndex];

@@ -3,9 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, UserProgress, ExamAttempt, TeamMemberStats } from '@/lib/types';
-import { DOMAINS } from '@/lib/questions-data';
+import { DOMAINS, QUESTIONS_DATA } from '@/lib/questions-data';
 import { formatTime, formatDate } from '@/lib/utils';
+import SubdomainMasteryCard from '@/components/SubdomainMasteryCard';
 import { Award, BarChart3, Users, BookOpen, Clock, CheckCircle2, ArrowRight, ShieldCheck, Flame, RotateCcw, TrendingUp } from 'lucide-react';
+
+const TOTAL_QUESTIONS_COUNT = QUESTIONS_DATA.length || 574;
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -54,7 +57,7 @@ export default function DashboardPage() {
   const bestMockScore = totalMocks > 0 ? Math.max(...attempts.map(a => a.scorePct)) : 0;
 
   // Readiness Score
-  const volumeScore = Math.min(100, Math.round((questionsPracticed / 134) * 100));
+  const volumeScore = Math.min(100, Math.round((questionsPracticed / TOTAL_QUESTIONS_COUNT) * 100));
   const readinessScore = Math.round((volumeScore * 0.35) + (accuracyPct * 0.3) + (bestMockScore * 0.35));
 
   return (
@@ -124,16 +127,16 @@ export default function DashboardPage() {
           </div>
           <div className="my-3">
             <span className="font-mono text-3xl font-extrabold text-foreground">
-              {questionsPracticed} <span className="text-sm font-normal text-muted-foreground">/ 134</span>
+              {questionsPracticed} <span className="text-sm font-normal text-muted-foreground">/ {TOTAL_QUESTIONS_COUNT}</span>
             </span>
             <span className="text-3xs text-muted-foreground block mt-0.5 font-mono">
-              {Math.round((questionsPracticed / 134) * 100)}% of Question Bank
+              {Math.round((questionsPracticed / TOTAL_QUESTIONS_COUNT) * 100)}% of Question Bank
             </span>
           </div>
           <div className="h-1.5 rounded-full bg-surface-lowest overflow-hidden border border-border">
             <div
               className="h-full bg-cyan-500"
-              style={{ width: `${Math.round((questionsPracticed / 134) * 100)}%` }}
+              style={{ width: `${Math.round((questionsPracticed / TOTAL_QUESTIONS_COUNT) * 100)}%` }}
             />
           </div>
         </div>
@@ -182,6 +185,9 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Subdomain Curriculum Mastery Component */}
+      <SubdomainMasteryCard userProgress={progress} />
 
       {/* Two Columns: Mock History & Team Leaderboard */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">

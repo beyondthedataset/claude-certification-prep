@@ -2,18 +2,23 @@
 
 import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { QUESTIONS_DATA, DOMAINS } from '@/lib/questions-data';
-import { Question, DomainKey, UserProgress } from '@/lib/types';
+import { QUESTIONS_DATA, DOMAINS, SUBDOMAINS, getSubdomainsByDomain } from '@/lib/questions-data';
+import { Question, DomainKey, UserProgress, QuestionBank } from '@/lib/types';
 import QuestionCard from '@/components/QuestionCard';
 import FlashcardViewer from '@/components/FlashcardViewer';
-import { Search, BookOpen, Layers, Star, X } from 'lucide-react';
+import BankSelector from '@/components/BankSelector';
+import { Search, BookOpen, Layers, Star, X, Compass, Filter } from 'lucide-react';
 
 function LearnPageContent() {
   const searchParams = useSearchParams();
   const initialDomain = searchParams.get('domain') as DomainKey | null;
+  const initialBank = (searchParams.get('bank') as QuestionBank) || 'all';
+  const initialSubdomain = searchParams.get('subdomain') || '';
 
   const [questions, setQuestions] = useState<Question[]>(QUESTIONS_DATA);
+  const [selectedBank, setSelectedBank] = useState<QuestionBank>(initialBank);
   const [selectedDomain, setSelectedDomain] = useState<DomainKey | 'all'>(initialDomain || 'all');
+  const [selectedSubdomain, setSelectedSubdomain] = useState<string>(initialSubdomain);
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'discussions' | 'disputed' | 'exhibits' | 'starred' | 'wrong' | 'correct'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'feed' | 'flashcard'>('feed');
@@ -24,6 +29,22 @@ function LearnPageContent() {
     notes: {},
     updatedAt: '',
   });
+
+  // Sync with searchParams when user navigates
+  useEffect(() => {
+    const b = searchParams.get('bank') as QuestionBank;
+    if (b && (b === 'all' || b === 'certsafari' || b === 'examtopics')) {
+      setSelectedBank(b);
+    }
+    const d = searchParams.get('domain') as DomainKey;
+    if (d) {
+      setSelectedDomain(d);
+    }
+    const sub = searchParams.get('subdomain');
+    if (sub !== null) {
+      setSelectedSubdomain(sub);
+    }
+  }, [searchParams]);
 
   // Load user progress
   useEffect(() => {
@@ -41,8 +62,17 @@ function LearnPageContent() {
   // Filter logic
   const filteredQuestions = questions.filter(q => {
     const qnum = q.question_number;
+
+    // Bank match
+    if (selectedBank !== 'all' && q.source !== selectedBank) return false;
+
     // Domain match
     if (selectedDomain !== 'all' && q.domain !== selectedDomain) return false;
+
+    // Subdomain match
+    if (selectedSubdomain) {
+      if (!q.subdomain || !q.subdomain.includes(selectedSubdomain)) return false;
+    }
 
     // Filter type match
     if (selectedFilter === 'discussions' && (q.comments_count || 0) === 0) return false;
@@ -63,9 +93,11 @@ function LearnPageContent() {
       const s = searchQuery.toLowerCase().trim();
       const qnumMatch = qnum.toString() === s || `q${qnum}` === s || `q#${qnum}` === s;
       const textMatch = q.question_text.toLowerCase().includes(s);
-      const choiceMatch = q.choices.some(c => c.text.toLowerCase().includes(s));
-      const discMatch = q.discussions.some(d => d.content.toLowerCase().includes(s));
-      if (!qnumMatch && !textMatch && !choiceMatch && !discMatch) return false;
+      const choiceMatch = q.choices.some(c => c.text.toLowerCase().includes(s) || (c.explanation && c.explanation.toLowerCase().includes(s)));
+      const discMatch = (q.discussions || []).some(d => d.content.toLowerCase().includes(s));
+      const expMatch = q.overall_explanation?.toLowerCase().includes(s);
+      const subMatch = q.subdomain?.toLowerCase().includes(s);
+      if (!qnumMatch && !textMatch && !choiceMatch && !discMatch && !expMatch && !subMatch) return false;
     }
 
     return true;
@@ -134,13 +166,15 @@ function LearnPageContent() {
           <div className="inline-flex items-center gap-2 mb-2 font-mono text-3xs text-primary uppercase tracking-widest font-semibold">
             <span>CCA-F Question Bank</span>
             <span>·</span>
-            <span>All 134 Questions</span>
+            <span>574 Questions Across 2 Banks</span>
+            <span>·</span>
+            <span>30 Subdomains</span>
           </div>
           <h1 className="font-headline text-2xl md:text-4xl font-extrabold text-foreground tracking-tight">
             Curriculum &amp; Deep Practice
           </h1>
           <p className="text-xs md:text-sm text-muted-foreground mt-1 max-w-2xl">
-            Test any question, review community voting consensus, and explore verified architectural explanations.
+            Switch between verified CertSafari rationales and ExamTopics community discussions, or drill by 30 official subdomains.
           </p>
         </div>
 
@@ -148,7 +182,7 @@ function LearnPageContent() {
         <div className="flex items-center gap-4 bg-surface-lowest p-3.5 rounded-xl border border-border shrink-0">
           <div className="flex flex-col text-right">
             <span className="font-mono text-base md:text-lg font-extrabold text-foreground">
-              {correctCount} / {answeredCount || 134}
+              {correctCount} / {answeredCount || 574}
             </span>
             <span className="font-mono text-3xs text-muted-foreground uppercase tracking-widest">
               Practiced ({accuracyPct}% Accuracy)
@@ -159,6 +193,19 @@ function LearnPageContent() {
           </div>
         </div>
       </div>
+
+      {/* Question Bank Selector */}
+      <BankSelector
+        selectedBank={selectedBank}
+        onSelectBank={bank => {
+          setSelectedBank(bank);
+        }}
+        counts={{
+          all: questions.length,
+          certsafari: questions.filter(q => q.source === 'certsafari').length,
+          examtopics: questions.filter(q => q.source === 'examtopics').length,
+        }}
+      />
 
       {/* Control Bar: Mode switch & Domain filters */}
       <div className="flex flex-col gap-4">
@@ -214,29 +261,103 @@ function LearnPageContent() {
         {/* 5 Domains Filter Strip */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
           <button
-            onClick={() => setSelectedDomain('all')}
+            onClick={() => {
+              setSelectedDomain('all');
+              setSelectedSubdomain('');
+            }}
             className={`px-3 py-1.5 rounded-full font-mono text-2xs uppercase tracking-wider font-semibold whitespace-nowrap transition-all border ${
               selectedDomain === 'all'
                 ? 'bg-primary text-white border-primary shadow-sm'
                 : 'bg-surface-card text-muted-foreground border-border hover:border-primary/40'
             }`}
           >
-            All Domains (134)
+            All Domains ({questions.filter(q => selectedBank === 'all' || q.source === selectedBank).length})
           </button>
-          {DOMAINS.map(d => (
-            <button
-              key={d.key}
-              onClick={() => setSelectedDomain(d.key)}
-              className={`px-3 py-1.5 rounded-full font-mono text-2xs uppercase tracking-wider font-semibold whitespace-nowrap transition-all border ${
-                selectedDomain === d.key
-                  ? 'bg-primary text-white border-primary shadow-sm'
-                  : 'bg-surface-card text-muted-foreground border-border hover:border-primary/40'
-              }`}
-            >
-              {d.code} ({d.weightPct}%)
-            </button>
-          ))}
+          {DOMAINS.map(d => {
+            const domainQCount = questions.filter(
+              q => q.domain === d.key && (selectedBank === 'all' || q.source === selectedBank)
+            ).length;
+            return (
+              <button
+                key={d.key}
+                onClick={() => {
+                  setSelectedDomain(d.key);
+                  setSelectedSubdomain('');
+                }}
+                className={`px-3 py-1.5 rounded-full font-mono text-2xs uppercase tracking-wider font-semibold whitespace-nowrap transition-all border ${
+                  selectedDomain === d.key
+                    ? 'bg-primary text-white border-primary shadow-sm'
+                    : 'bg-surface-card text-muted-foreground border-border hover:border-primary/40'
+                }`}
+              >
+                {d.code} ({domainQCount})
+              </button>
+            );
+          })}
         </div>
+
+        {/* Subdomain Filter Strip when domain is chosen */}
+        {selectedDomain !== 'all' && (
+          <div className="flex flex-col gap-2 p-3 bg-surface-card border border-border/80 rounded-xl">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-2xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Compass className="w-3.5 h-3.5 text-primary" />
+                Subdomains in {DOMAINS.find(d => d.key === selectedDomain)?.code}:
+              </span>
+              {selectedSubdomain && (
+                <button
+                  onClick={() => setSelectedSubdomain('')}
+                  className="text-3xs text-primary hover:underline flex items-center gap-1 font-mono"
+                >
+                  <X className="w-3 h-3" /> Clear Subdomain Filter
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              <button
+                onClick={() => setSelectedSubdomain('')}
+                className={`px-2.5 py-1 rounded-full font-mono text-3xs uppercase tracking-wider font-semibold whitespace-nowrap transition-all border ${
+                  !selectedSubdomain
+                    ? 'bg-primary/20 text-primary border-primary/40'
+                    : 'bg-surface-lowest text-muted-foreground border-border hover:border-primary/40'
+                }`}
+              >
+                All Subdomains
+              </button>
+              {getSubdomainsByDomain(selectedDomain as DomainKey).map(sub => (
+                <button
+                  key={sub.code}
+                  onClick={() => setSelectedSubdomain(sub.code)}
+                  title={sub.title}
+                  className={`px-2.5 py-1 rounded-full font-mono text-3xs font-semibold whitespace-nowrap transition-all border flex items-center gap-1.5 ${
+                    selectedSubdomain === sub.code
+                      ? 'bg-primary text-white border-primary shadow-sm'
+                      : 'bg-surface-lowest text-muted-foreground border-border hover:border-primary/40'
+                  }`}
+                >
+                  <span>{sub.code}</span>
+                  <span className="text-[10px] opacity-75">({sub.questionCount})</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Banner if subdomain is active while domain is 'all' */}
+        {selectedDomain === 'all' && selectedSubdomain && (
+          <div className="flex items-center justify-between p-3 bg-primary/10 border border-primary/30 rounded-xl text-xs">
+            <span className="flex items-center gap-2 text-primary font-medium">
+              <Compass className="w-4 h-4" />
+              Drilling Subdomain <strong>{selectedSubdomain}</strong>: {SUBDOMAINS.find(s => s.code === selectedSubdomain)?.title || ''}
+            </span>
+            <button
+              onClick={() => setSelectedSubdomain('')}
+              className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+            >
+              <X className="w-3.5 h-3.5" /> Clear Filter
+            </button>
+          </div>
+        )}
 
         {/* Sub-Filters: Discussions / Disputed / Exhibits / Starred */}
         <div className="flex items-center gap-2 overflow-x-auto text-2xs font-mono">
@@ -258,7 +379,7 @@ function LearnPageContent() {
                 : 'text-muted-foreground border-transparent hover:text-cyan-400'
             }`}
           >
-            💬 Discussions (40)
+            💬 Discussions
           </button>
           <button
             onClick={() => setSelectedFilter('disputed')}
@@ -268,7 +389,7 @@ function LearnPageContent() {
                 : 'text-muted-foreground border-transparent hover:text-amber-400'
             }`}
           >
-            ⚠️ Disputed (15)
+            ⚠️ Disputed
           </button>
           <button
             onClick={() => setSelectedFilter('exhibits')}
@@ -278,7 +399,7 @@ function LearnPageContent() {
                 : 'text-muted-foreground border-transparent hover:text-foreground'
             }`}
           >
-            🖼️ Exhibits (46)
+            🖼️ Exhibits
           </button>
           <button
             onClick={() => setSelectedFilter('starred')}
@@ -322,7 +443,9 @@ function LearnPageContent() {
               </p>
               <button
                 onClick={() => {
+                  setSelectedBank('all');
                   setSelectedDomain('all');
+                  setSelectedSubdomain('');
                   setSelectedFilter('all');
                   setSearchQuery('');
                 }}

@@ -5,6 +5,8 @@ export type DomainKey =
   | 'domain_4_prompt_engineering'
   | 'domain_5_context_management';
 
+export type QuestionBank = 'all' | 'certsafari' | 'examtopics';
+
 export interface DomainInfo {
   key: DomainKey;
   code: string;
@@ -13,10 +15,19 @@ export interface DomainInfo {
   description: string;
 }
 
+export interface SubdomainInfo {
+  code: string;
+  title: string;
+  domainKey: DomainKey;
+  domainCode: string;
+  questionCount?: number;
+}
+
 export interface QuestionChoice {
   letter: string;
   text: string;
   is_correct: boolean;
+  explanation?: string;
 }
 
 export interface VoteStat {
@@ -35,22 +46,27 @@ export interface DiscussionComment {
 
 export interface Question {
   question_number: number;
-  question_id: number;
+  source: 'examtopics' | 'certsafari';
+  domain: DomainKey;
+  domain_code?: string;
+  domain_name?: string;
+  subdomain?: string;
+  question_id?: number | string;
   discussion_id?: string;
   discussion_url?: string;
-  topic: string;
-  domain: DomainKey;
+  topic?: string;
   question_text: string;
-  images: string[];
+  images?: string[];
   choices: QuestionChoice[];
   correct_answer: string;
-  voted_stats: VoteStat[];
-  most_voted_answer: string | null;
-  total_community_votes: number;
-  community_consensus: string;
+  overall_explanation?: string;
+  voted_stats?: VoteStat[];
+  most_voted_answer?: string | null;
+  total_community_votes?: number;
+  community_consensus?: string;
   is_controversial: boolean;
   comments_count: number;
-  discussions: DiscussionComment[];
+  discussions?: DiscussionComment[];
 }
 
 export interface User {
@@ -85,6 +101,7 @@ export interface ExamAttempt {
   id: string;
   userId: string;
   examType: 'full' | 'quick' | 'domain';
+  bank?: QuestionBank;
   domainKey?: DomainKey;
   questionNumbers: number[];
   answers: Record<number, string>; // qnum -> answer
