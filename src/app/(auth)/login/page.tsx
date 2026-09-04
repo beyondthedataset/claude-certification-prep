@@ -110,34 +110,16 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Quick Demo Logins for Team */}
+        {/* Quick Admin Access */}
         <div className="pt-4 border-t border-border/40 text-center">
-          <span className="font-mono text-3xs text-muted-foreground uppercase tracking-wider block mb-2 font-semibold">
-            Quick 1-Click Demo Accounts
-          </span>
-          <div className="flex justify-center gap-2 flex-wrap">
-            <button
-              onClick={() => handleQuickLogin('alex')}
-              className="px-2.5 py-1 rounded bg-surface-high border border-border text-2xs font-mono text-primary hover:bg-surface-container transition-colors"
-            >
-              alex
-            </button>
-            <button
-              onClick={() => handleQuickLogin('sarah')}
-              className="px-2.5 py-1 rounded bg-surface-high border border-border text-2xs font-mono text-primary hover:bg-surface-container transition-colors"
-            >
-              sarah
-            </button>
-            <button
-              onClick={() => handleQuickLogin('admin')}
-              className="px-2.5 py-1 rounded bg-surface-high border border-border text-2xs font-mono text-primary hover:bg-surface-container transition-colors"
-            >
-              admin
-            </button>
-          </div>
-          <span className="text-3xs text-muted-foreground mt-1.5 block font-mono">
-            Default pass: <code className="text-primary font-bold">claude2026</code>
-          </span>
+          <button
+            type="button"
+            onClick={() => handleQuickLogin('admin')}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-surface-high hover:bg-surface-container border border-border text-2xs font-mono text-foreground hover:text-primary transition-colors"
+          >
+            <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+            <span>Fill Admin Credentials</span>
+          </button>
         </div>
 
         <div className="text-center text-xs text-muted-foreground">

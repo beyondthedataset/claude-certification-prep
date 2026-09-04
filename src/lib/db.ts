@@ -72,7 +72,7 @@ export async function initDatabase(): Promise<void> {
       );
     `);
 
-    // Check if initial users exist, if not pre-seed demo accounts
+    // Check if initial users exist, if not create admin account
     const usersCount = await db.execute('SELECT COUNT(*) as count FROM users');
     const count = Number(usersCount.rows[0]?.count || 0);
 
@@ -86,62 +86,8 @@ export async function initDatabase(): Promise<void> {
       });
 
       await db.execute({
-        sql: `INSERT INTO users (id, username, fullName, role, passwordHash, createdAt) VALUES (?, ?, ?, ?, ?, ?)`,
-        args: ['user_alex', 'alex', 'Alex Morgan', 'member', defaultHash, now],
-      });
-
-      await db.execute({
-        sql: `INSERT INTO users (id, username, fullName, role, passwordHash, createdAt) VALUES (?, ?, ?, ?, ?, ?)`,
-        args: ['user_sarah', 'sarah', 'Sarah Chen', 'member', defaultHash, now],
-      });
-
-      // Pre-seed some progress for Alex
-      const alexAnswers = {
-        1: { selectedAnswer: 'B', isCorrect: true, timestamp: now },
-        2: { selectedAnswer: 'B', isCorrect: true, timestamp: now },
-        3: { selectedAnswer: 'A', isCorrect: true, timestamp: now },
-        4: { selectedAnswer: 'A', isCorrect: true, timestamp: now },
-        8: { selectedAnswer: 'D', isCorrect: false, timestamp: now },
-        9: { selectedAnswer: 'A', isCorrect: true, timestamp: now },
-        20: { selectedAnswer: 'D', isCorrect: true, timestamp: now },
-      };
-
-      await db.execute({
         sql: `INSERT INTO user_progress (userId, answers, starred, notes, updatedAt) VALUES (?, ?, ?, ?, ?)`,
-        args: ['user_alex', JSON.stringify(alexAnswers), JSON.stringify({ 8: true, 9: true, 26: true }), '{}', now],
-      });
-
-      await db.execute({
-        sql: `INSERT INTO user_progress (userId, answers, starred, notes, updatedAt) VALUES (?, ?, ?, ?, ?)`,
-        args: ['user_sarah', JSON.stringify({ 1: { selectedAnswer: 'B', isCorrect: true, timestamp: now } }), JSON.stringify({ 8: true }), '{}', now],
-      });
-
-      // Pre-seed one sample mock exam attempt
-      await db.execute({
-        sql: `INSERT INTO exam_attempts (id, userId, examType, domainKey, questionNumbers, answers, flagged, startedAt, completedAt, timeSpentSeconds, totalQuestions, score, scorePct, passed, domainScores) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        args: [
-          'attempt_alex_demo',
-          'user_alex',
-          'quick',
-          null,
-          JSON.stringify(Array.from({ length: 25 }, (_, i) => i + 1)),
-          JSON.stringify({ 1: 'B', 2: 'B', 3: 'A', 4: 'A', 5: 'D', 6: 'C', 7: 'C', 8: 'D', 9: 'A', 10: 'C' }),
-          JSON.stringify({ 8: true }),
-          new Date(Date.now() - 3600000).toISOString(),
-          now,
-          1620,
-          25,
-          22,
-          88,
-          1,
-          JSON.stringify({
-            domain_1_agentic_architecture: { correct: 9, total: 10, pct: 90 },
-            domain_2_tool_design_mcp: { correct: 5, total: 5, pct: 100 },
-            domain_3_claude_code_config: { correct: 3, total: 4, pct: 75 },
-            domain_4_prompt_engineering: { correct: 3, total: 3, pct: 100 },
-            domain_5_context_management: { correct: 2, total: 3, pct: 67 },
-          }),
-        ],
+        args: ['user_admin', '{}', '{}', '{}', now],
       });
     }
 
