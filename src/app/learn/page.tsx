@@ -2,12 +2,13 @@
 
 import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { QUESTIONS_DATA, DOMAINS, SUBDOMAINS, getSubdomainsByDomain } from '@/lib/questions-data';
 import { Question, DomainKey, UserProgress, QuestionBank } from '@/lib/types';
 import QuestionCard from '@/components/QuestionCard';
 import FlashcardViewer from '@/components/FlashcardViewer';
 import BankSelector from '@/components/BankSelector';
-import { Search, BookOpen, Layers, Star, X, Compass, Filter } from 'lucide-react';
+import { Search, BookOpen, Layers, Star, X, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 function LearnPageContent() {
   const searchParams = useSearchParams();
@@ -15,13 +16,19 @@ function LearnPageContent() {
   const initialBank = (searchParams.get('bank') as QuestionBank) || 'all';
   const initialSubdomain = searchParams.get('subdomain') || '';
 
-  const [questions, setQuestions] = useState<Question[]>(QUESTIONS_DATA);
+  const [activeCategory, setActiveCategory] = useState<'all' | 'cloud' | 'ai' | 'security'>('all');
+  const [drillView, setDrillView] = useState(false);
+
+  const [questions] = useState<Question[]>(QUESTIONS_DATA);
   const [selectedBank, setSelectedBank] = useState<QuestionBank>(initialBank);
   const [selectedDomain, setSelectedDomain] = useState<DomainKey | 'all'>(initialDomain || 'all');
   const [selectedSubdomain, setSelectedSubdomain] = useState<string>(initialSubdomain);
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'discussions' | 'disputed' | 'exhibits' | 'starred' | 'wrong' | 'correct'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'feed' | 'flashcard'>('feed');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 15;
+
   const [userProgress, setUserProgress] = useState<UserProgress>({
     userId: '',
     answers: {},
@@ -30,23 +37,24 @@ function LearnPageContent() {
     updatedAt: '',
   });
 
-  // Sync with searchParams when user navigates
   useEffect(() => {
     const b = searchParams.get('bank') as QuestionBank;
     if (b && (b === 'all' || b === 'certsafari' || b === 'examtopics')) {
       setSelectedBank(b);
+      setDrillView(true);
     }
     const d = searchParams.get('domain') as DomainKey;
     if (d) {
       setSelectedDomain(d);
+      setDrillView(true);
     }
     const sub = searchParams.get('subdomain');
-    if (sub !== null) {
+    if (sub !== null && sub !== '') {
       setSelectedSubdomain(sub);
+      setDrillView(true);
     }
   }, [searchParams]);
 
-  // Load user progress
   useEffect(() => {
     fetch('/api/progress')
       .then(res => {
@@ -59,22 +67,79 @@ function LearnPageContent() {
       .catch(() => {});
   }, []);
 
-  // Filter logic
+  const tracks = [
+    {
+      id: 'aws-saa',
+      title: 'AWS Solutions Architect Associate (SAA-C03)',
+      category: 'cloud',
+      provider: 'AWS · Architecture',
+      status: 'Ready to Pass',
+      statusType: 'success',
+      desc: 'High-availability VPC design, decoupled microservices, and IAM delegation.',
+      readiness: 82,
+      timedSets: '6 Timed Sets',
+      lastMock: '860/1000',
+      avgTime: '54s / Question avg',
+      action: 'Continue Practice',
+      link: '/mock-exam',
+    },
+    {
+      id: 'azure-ai',
+      title: 'Azure AI Engineer Associate (AI-102)',
+      category: 'ai',
+      provider: 'Azure · AI & ML',
+      status: 'Review Needed',
+      statusType: 'warning',
+      desc: 'Azure OpenAI Service integration, Cognitive Search semantic rankers, and Vision APIs.',
+      readiness: 71,
+      timedSets: '4 Timed Sets',
+      lastMock: '695/1000',
+      avgTime: 'Mock #3 Paused at Q34',
+      action: 'Resume Test',
+      link: '/mock-exam',
+    },
+    {
+      id: 'claude-cca',
+      title: 'Anthropic Claude Certified Architect (CCA-F)',
+      category: 'ai',
+      provider: 'Anthropic · LLM Architecture',
+      status: 'Master Bank Loaded',
+      statusType: 'success',
+      desc: 'Agentic architecture, subagent orchestration, Model Context Protocol (MCP), and prompt engineering.',
+      readiness: 84,
+      timedSets: '574 Scenarios',
+      lastMock: '30 Subdomains',
+      avgTime: 'CertSafari & ExamTopics',
+      action: 'Explore 574 Bank',
+      isInternalQBank: true,
+    },
+    {
+      id: 'gcp-pca',
+      title: 'Google Cloud Professional Cloud Architect (PCA)',
+      category: 'cloud',
+      provider: 'Google Cloud · Infrastructure',
+      status: 'Diagnostic Available',
+      statusType: 'neutral',
+      desc: 'Enterprise hybrid connectivity, Anthos multi-cloud clusters, and Cloud Spanner.',
+      readiness: 64,
+      timedSets: '4 Case Studies',
+      lastMock: '680 Questions',
+      avgTime: 'Focus: Spanner',
+      action: 'Start Diagnostic',
+      link: '/mock-exam',
+    },
+  ];
+
+  const filteredTracks = tracks.filter(t => {
+    if (activeCategory === 'all') return true;
+    return t.category === activeCategory;
+  });
+
   const filteredQuestions = questions.filter(q => {
     const qnum = q.question_number;
-
-    // Bank match
     if (selectedBank !== 'all' && q.source !== selectedBank) return false;
-
-    // Domain match
     if (selectedDomain !== 'all' && q.domain !== selectedDomain) return false;
-
-    // Subdomain match
-    if (selectedSubdomain) {
-      if (!q.subdomain || !q.subdomain.includes(selectedSubdomain)) return false;
-    }
-
-    // Filter type match
+    if (selectedSubdomain && (!q.subdomain || !q.subdomain.includes(selectedSubdomain))) return false;
     if (selectedFilter === 'discussions' && (q.comments_count || 0) === 0) return false;
     if (selectedFilter === 'disputed' && !q.is_controversial) return false;
     if (selectedFilter === 'exhibits' && (!q.images || q.images.length === 0)) return false;
@@ -87,8 +152,6 @@ function LearnPageContent() {
       const ans = userProgress.answers[qnum];
       if (!ans || !ans.isCorrect) return false;
     }
-
-    // Search query match
     if (searchQuery.trim()) {
       const s = searchQuery.toLowerCase().trim();
       const qnumMatch = qnum.toString() === s || `q${qnum}` === s || `q#${qnum}` === s;
@@ -99,9 +162,11 @@ function LearnPageContent() {
       const subMatch = q.subdomain?.toLowerCase().includes(s);
       if (!qnumMatch && !textMatch && !choiceMatch && !discMatch && !expMatch && !subMatch) return false;
     }
-
     return true;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredQuestions.length / PAGE_SIZE));
+  const pagedQuestions = filteredQuestions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const handleSelectAnswer = async (qnum: number, letter: string) => {
     const q = questions.find(item => item.question_number === qnum);
@@ -109,7 +174,6 @@ function LearnPageContent() {
     const userAns = letter.toUpperCase().replace(/[^A-Z]/g, '');
     const isCorrect = official.includes(userAns) || userAns === official;
 
-    // Optimistic UI update
     setUserProgress(prev => ({
       ...prev,
       answers: {
@@ -118,7 +182,6 @@ function LearnPageContent() {
       },
     }));
 
-    // Server update
     try {
       await fetch('/api/progress', {
         method: 'POST',
@@ -146,352 +209,362 @@ function LearnPageContent() {
     } catch {}
   };
 
-  const handleResetAttempt = async (qnum: number) => {
-    setUserProgress(prev => {
-      const updated = { ...prev.answers };
-      delete updated[qnum];
-      return { ...prev, answers: updated };
-    });
-  };
-
-  const answeredCount = Object.keys(userProgress.answers).length;
-  const correctCount = Object.values(userProgress.answers).filter(a => a.isCorrect).length;
-  const accuracyPct = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
-
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 w-full flex flex-col gap-6">
-      {/* Top Header Card */}
-      <div className="p-6 md:p-8 rounded-2xl bg-surface-card border border-border border-l-2 border-l-primary shadow-card flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div>
-          <div className="inline-flex items-center gap-2 mb-2 font-mono text-3xs text-primary uppercase tracking-widest font-semibold">
-            <span>CCA-F Question Bank</span>
-            <span>·</span>
-            <span>574 Questions Across 2 Banks</span>
-            <span>·</span>
-            <span>30 Subdomains</span>
-          </div>
-          <h1 className="font-headline text-2xl md:text-4xl font-extrabold text-foreground tracking-tight">
-            Curriculum &amp; Deep Practice
-          </h1>
-          <p className="text-xs md:text-sm text-muted-foreground mt-1 max-w-2xl">
-            Switch between verified CertSafari rationales and ExamTopics community discussions, or drill by 30 official subdomains.
-          </p>
-        </div>
+    <div className="w-full min-h-screen bg-[#0D0E12] text-on-surface">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-8">
 
-        {/* Live Score Tracker Pill */}
-        <div className="flex items-center gap-4 bg-surface-lowest p-3.5 rounded-xl border border-border shrink-0">
-          <div className="flex flex-col text-right">
-            <span className="font-mono text-base md:text-lg font-extrabold text-foreground">
-              {correctCount} / {answeredCount || 574}
+        {/* 1. Top Master Overview Banner */}
+        <section className="p-6 sm:p-8 rounded-xl bg-[#14161D] border border-white/[0.07] flex flex-col md:flex-row items-start md:items-center justify-between gap-8 shadow-sm">
+          <div className="space-y-2 max-w-2xl">
+            <span className="font-mono text-[11px] uppercase tracking-wider text-on-surface-variant/80">
+              Certification Intelligence
             </span>
-            <span className="font-mono text-3xs text-muted-foreground uppercase tracking-widest">
-              Practiced ({accuracyPct}% Accuracy)
-            </span>
-          </div>
-          <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
-            {accuracyPct}%
-          </div>
-        </div>
-      </div>
-
-      {/* Question Bank Selector */}
-      <BankSelector
-        selectedBank={selectedBank}
-        onSelectBank={bank => {
-          setSelectedBank(bank);
-        }}
-        counts={{
-          all: questions.length,
-          certsafari: questions.filter(q => q.source === 'certsafari').length,
-          examtopics: questions.filter(q => q.source === 'examtopics').length,
-        }}
-      />
-
-      {/* Control Bar: Mode switch & Domain filters */}
-      <div className="flex flex-col gap-4">
-        {/* View mode toggle & Search */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-surface-card border border-border rounded-xl">
-          {/* Search box */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search topics, keywords, MCP, XML, Q#..."
-              className="w-full pl-9 pr-8 py-2 rounded-lg bg-surface-lowest border border-border text-foreground text-xs md:text-sm focus:outline-none focus:border-primary transition-all font-mono"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
+            <h1 className="font-headline text-3xl sm:text-4xl text-white font-medium tracking-tight">
+              Master AI &amp; Cloud Certifications.
+            </h1>
+            <p className="text-[14px] sm:text-[15px] leading-relaxed text-on-surface-variant">
+              Adaptive scenarios, architecture diagnostics, and predictive readiness calibrated to official examination standards.
+            </p>
           </div>
 
-          {/* Mode Switch: Feed vs Flashcard */}
-          <div className="flex items-center gap-1 bg-surface-lowest p-1 rounded-lg border border-border shrink-0">
-            <button
-              onClick={() => setViewMode('feed')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                viewMode === 'feed'
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Layers className="h-3.5 w-3.5" />
-              <span>Full Feed</span>
-            </button>
-            <button
-              onClick={() => setViewMode('flashcard')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                viewMode === 'flashcard'
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <BookOpen className="h-3.5 w-3.5" />
-              <span>Flashcard Focus</span>
-            </button>
-          </div>
-        </div>
-
-        {/* 5 Domains Filter Strip */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          <button
-            onClick={() => {
-              setSelectedDomain('all');
-              setSelectedSubdomain('');
-            }}
-            className={`px-3 py-1.5 rounded-full font-mono text-2xs uppercase tracking-wider font-semibold whitespace-nowrap transition-all border ${
-              selectedDomain === 'all'
-                ? 'bg-primary text-white border-primary shadow-sm'
-                : 'bg-surface-card text-muted-foreground border-border hover:border-primary/40'
-            }`}
-          >
-            All Domains ({questions.filter(q => selectedBank === 'all' || q.source === selectedBank).length})
-          </button>
-          {DOMAINS.map(d => {
-            const domainQCount = questions.filter(
-              q => q.domain === d.key && (selectedBank === 'all' || q.source === selectedBank)
-            ).length;
-            return (
-              <button
-                key={d.key}
-                onClick={() => {
-                  setSelectedDomain(d.key);
-                  setSelectedSubdomain('');
-                }}
-                className={`px-3 py-1.5 rounded-full font-mono text-2xs uppercase tracking-wider font-semibold whitespace-nowrap transition-all border ${
-                  selectedDomain === d.key
-                    ? 'bg-primary text-white border-primary shadow-sm'
-                    : 'bg-surface-card text-muted-foreground border-border hover:border-primary/40'
-                }`}
-              >
-                {d.code} ({domainQCount})
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Subdomain Filter Strip when domain is chosen */}
-        {selectedDomain !== 'all' && (
-          <div className="flex flex-col gap-2 p-3 bg-surface-card border border-border/80 rounded-xl">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-2xs uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <Compass className="w-3.5 h-3.5 text-primary" />
-                Subdomains in {DOMAINS.find(d => d.key === selectedDomain)?.code}:
-              </span>
-              {selectedSubdomain && (
-                <button
-                  onClick={() => setSelectedSubdomain('')}
-                  className="text-3xs text-primary hover:underline flex items-center gap-1 font-mono"
-                >
-                  <X className="w-3 h-3" /> Clear Subdomain Filter
-                </button>
-              )}
+          <div className="flex items-center gap-6 shrink-0 p-5 rounded-lg bg-[#0D0E12] border border-white/[0.06]">
+            <div className="flex flex-col">
+              <span className="font-mono text-[10px] text-on-surface-variant uppercase tracking-wider">Overall Readiness</span>
+              <span className="font-headline text-3xl text-white font-semibold mt-0.5">78%</span>
+              <span className="text-[11px] font-mono text-on-surface-variant/80 mt-0.5">Pass Probable · 16d Left</span>
             </div>
-            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <button
+              onClick={() => {
+                setDrillView(true);
+                window.scrollTo({ top: 700, behavior: 'smooth' });
+              }}
+              className="px-4 py-2 rounded-md bg-white text-black text-[13px] font-medium hover:bg-neutral-200 transition-all flex items-center gap-1.5"
+            >
+              <span>Rapid Drill</span>
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          </div>
+        </section>
+
+        {/* 2. Filter & Segmentation Deck */}
+        <section className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-white/[0.07]">
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { id: 'all', label: 'All Certifications' },
+              { id: 'cloud', label: 'Cloud Architecture' },
+              { id: 'ai', label: 'Generative AI & LLMs' },
+              { id: 'security', label: 'DevOps & Security' },
+            ].map(tab => (
               <button
-                onClick={() => setSelectedSubdomain('')}
-                className={`px-2.5 py-1 rounded-full font-mono text-3xs uppercase tracking-wider font-semibold whitespace-nowrap transition-all border ${
-                  !selectedSubdomain
-                    ? 'bg-primary/20 text-primary border-primary/40'
-                    : 'bg-surface-lowest text-muted-foreground border-border hover:border-primary/40'
+                key={tab.id}
+                onClick={() => setActiveCategory(tab.id as any)}
+                className={`px-3.5 py-1.5 rounded-md text-[13px] font-medium transition-all ${
+                  activeCategory === tab.id
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-on-surface-variant hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
-                All Subdomains
+                {tab.label}
               </button>
-              {getSubdomainsByDomain(selectedDomain as DomainKey).map(sub => (
+            ))}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-[11px] text-on-surface-variant">
+              {filteredTracks.length} Enrolled Tracks
+            </span>
+            <button
+              onClick={() => setDrillView(!drillView)}
+              className={`px-3 py-1 rounded text-xs font-mono border transition-colors ${
+                drillView
+                  ? 'bg-[#1C202B] border-white/20 text-white'
+                  : 'border-white/10 text-on-surface-variant hover:text-white'
+              }`}
+            >
+              {drillView ? 'Hide Q-Bank Drill' : 'Open Q-Bank Drill'}
+            </button>
+          </div>
+        </section>
+
+        {/* 3. Main Stage: Catalog Grid + Diagnostics Hub */}
+        <section className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+          {/* Active Certification Tracks (8 cols) */}
+          <div className="xl:col-span-8 flex flex-col gap-4">
+            <div className="flex items-center justify-between pb-1">
+              <h2 className="font-headline text-[16px] text-white font-medium">Active Certification Tracks</h2>
+              <span className="font-mono text-[11px] text-on-surface-variant/70">Priority Queue</span>
+            </div>
+
+            {filteredTracks.map(track => (
+              <div
+                key={track.id}
+                className="p-6 rounded-xl bg-[#14161D] border border-white/[0.07] hover:border-white/[0.14] transition-all"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1.5 max-w-xl">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-[10px] text-on-surface-variant uppercase tracking-wider">
+                        {track.provider}
+                      </span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded font-mono text-[10px] border ${
+                          track.statusType === 'success'
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            : 'bg-white/5 text-white/80 border-white/10'
+                        }`}
+                      >
+                        {track.status}
+                      </span>
+                    </div>
+
+                    <h3 className="font-headline text-lg text-white font-semibold">{track.title}</h3>
+                    <p className="text-xs sm:text-[13px] text-on-surface-variant leading-relaxed">{track.desc}</p>
+                  </div>
+
+                  <div className="flex sm:flex-col items-start sm:items-end justify-between gap-2 shrink-0">
+                    <div className="text-right">
+                      <span className="font-headline text-2xl text-white font-semibold">{track.readiness}%</span>
+                      <span className="block font-mono text-[10px] text-on-surface-variant">Readiness</span>
+                    </div>
+
+                    {track.isInternalQBank ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDrillView(true);
+                          window.scrollTo({ top: 600, behavior: 'smooth' });
+                        }}
+                        className="px-4 py-1.5 rounded-md bg-white text-black text-xs font-medium hover:bg-neutral-200 transition-all flex items-center gap-1 mt-1"
+                      >
+                        <span>{track.action}</span>
+                        <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                      </button>
+                    ) : (
+                      <Link
+                        href={track.link || '/mock-exam'}
+                        className="px-4 py-1.5 rounded-md bg-white text-black text-xs font-medium hover:bg-neutral-200 transition-all flex items-center gap-1 mt-1"
+                      >
+                        <span>{track.action}</span>
+                        <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                      </Link>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-5 mt-4 pt-3 border-t border-white/[0.05] text-xs font-mono text-on-surface-variant">
+                  <span className="text-white">{track.timedSets}</span>
+                  <span>•</span>
+                  <span>{track.lastMock}</span>
+                  <span>•</span>
+                  <span>{track.avgTime}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Daily Recommended Drill Sidebar (4 cols) */}
+          <aside className="xl:col-span-4 flex flex-col gap-6 w-full">
+            <div className="p-6 rounded-xl bg-[#14161D] border border-white/[0.07] space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
+                <span className="font-headline text-[15px] text-white font-medium">Daily Recommended Drill</span>
+                <span className="font-mono text-[11px] text-on-surface-variant">15 MIN</span>
+              </div>
+
+              <p className="text-[13px] leading-relaxed text-on-surface-variant">
+                Targeted 15-question micro-session tuned directly to high-frequency mistakes in AWS IAM Role Chaining, Transit Gateway routing, and Azure OpenAI model allocations.
+              </p>
+
+              <div className="p-3 rounded-lg bg-[#0D0E12] border border-white/[0.05] flex items-center justify-between font-mono text-[11px]">
+                <span className="text-on-surface-variant">Estimated Gain</span>
+                <span className="text-white font-medium">+35 PTS Score</span>
+              </div>
+
+              <Link
+                href="/mock-exam"
+                className="w-full py-2.5 rounded-md bg-white text-black text-[13px] font-medium hover:bg-neutral-200 transition-all flex items-center justify-center gap-1.5"
+              >
+                <span>Start Daily Drill</span>
+                <span className="material-symbols-outlined text-sm">arrow_forward</span>
+              </Link>
+            </div>
+          </aside>
+        </section>
+
+        {/* 4. Deep Scenario Q-Bank Drill Engine (574 Questions) */}
+        {drillView && (
+          <section className="mt-8 pt-8 border-t border-white/[0.08] flex flex-col gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <div>
+                <span className="text-xs font-mono text-[#7BD0FF] uppercase tracking-wider">
+                  Deep Architectural Practice
+                </span>
+                <h2 className="font-headline text-2xl text-white font-semibold mt-1">
+                  Claude Certified Architect (574 Verified Scenarios)
+                </h2>
+                <p className="text-xs text-on-surface-variant mt-1">
+                  CertSafari detailed option rationales and ExamTopics practitioner consensus discussions.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
                 <button
-                  key={sub.code}
-                  onClick={() => setSelectedSubdomain(sub.code)}
-                  title={sub.title}
-                  className={`px-2.5 py-1 rounded-full font-mono text-3xs font-semibold whitespace-nowrap transition-all border flex items-center gap-1.5 ${
-                    selectedSubdomain === sub.code
-                      ? 'bg-primary text-white border-primary shadow-sm'
-                      : 'bg-surface-lowest text-muted-foreground border-border hover:border-primary/40'
+                  type="button"
+                  onClick={() => setViewMode('feed')}
+                  className={`px-3 py-1 rounded text-xs flex items-center gap-1.5 ${
+                    viewMode === 'feed' ? 'bg-white text-black font-medium' : 'text-on-surface-variant hover:text-white border border-white/10'
                   }`}
                 >
-                  <span>{sub.code}</span>
-                  <span className="text-[10px] opacity-75">({sub.questionCount})</span>
+                  <Layers className="h-3.5 w-3.5" />
+                  <span>Feed</span>
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={() => setViewMode('flashcard')}
+                  className={`px-3 py-1 rounded text-xs flex items-center gap-1.5 ${
+                    viewMode === 'flashcard' ? 'bg-white text-black font-medium' : 'text-on-surface-variant hover:text-white border border-white/10'
+                  }`}
+                >
+                  <BookOpen className="h-3.5 w-3.5" />
+                  <span>Cards</span>
+                </button>
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* Banner if subdomain is active while domain is 'all' */}
-        {selectedDomain === 'all' && selectedSubdomain && (
-          <div className="flex items-center justify-between p-3 bg-primary/10 border border-primary/30 rounded-xl text-xs">
-            <span className="flex items-center gap-2 text-primary font-medium">
-              <Compass className="w-4 h-4" />
-              Drilling Subdomain <strong>{selectedSubdomain}</strong>: {SUBDOMAINS.find(s => s.code === selectedSubdomain)?.title || ''}
-            </span>
-            <button
-              onClick={() => setSelectedSubdomain('')}
-              className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
-            >
-              <X className="w-3.5 h-3.5" /> Clear Filter
-            </button>
-          </div>
-        )}
+            {/* Filter controls */}
+            <div className="flex flex-col gap-3 p-4 rounded-xl bg-[#14161D] border border-white/[0.07]">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-outline" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Search topics, MCP, XML, Q#..."
+                    className="w-full pl-9 pr-8 py-2 rounded-md bg-[#0D0E12] border border-white/[0.08] text-sm text-white focus:outline-none focus:border-white/30"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-outline hover:text-white"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
 
-        {/* Sub-Filters: Discussions / Disputed / Exhibits / Starred */}
-        <div className="flex items-center gap-2 overflow-x-auto text-2xs font-mono">
-          <button
-            onClick={() => setSelectedFilter('all')}
-            className={`px-2.5 py-1 rounded border transition-colors ${
-              selectedFilter === 'all'
-                ? 'bg-surface-high text-foreground font-bold border-border'
-                : 'text-muted-foreground border-transparent hover:text-foreground'
-            }`}
-          >
-            All Questions ({filteredQuestions.length})
-          </button>
-          <button
-            onClick={() => setSelectedFilter('discussions')}
-            className={`px-2.5 py-1 rounded border transition-colors ${
-              selectedFilter === 'discussions'
-                ? 'bg-cyan-500/15 text-cyan-400 font-bold border-cyan-500/40'
-                : 'text-muted-foreground border-transparent hover:text-cyan-400'
-            }`}
-          >
-            💬 Discussions
-          </button>
-          <button
-            onClick={() => setSelectedFilter('disputed')}
-            className={`px-2.5 py-1 rounded border transition-colors ${
-              selectedFilter === 'disputed'
-                ? 'bg-amber-500/15 text-amber-400 font-bold border-amber-500/40'
-                : 'text-muted-foreground border-transparent hover:text-amber-400'
-            }`}
-          >
-            ⚠️ Disputed
-          </button>
-          <button
-            onClick={() => setSelectedFilter('exhibits')}
-            className={`px-2.5 py-1 rounded border transition-colors ${
-              selectedFilter === 'exhibits'
-                ? 'bg-surface-high text-foreground font-bold border-border'
-                : 'text-muted-foreground border-transparent hover:text-foreground'
-            }`}
-          >
-            🖼️ Exhibits
-          </button>
-          <button
-            onClick={() => setSelectedFilter('starred')}
-            className={`px-2.5 py-1 rounded border transition-colors ${
-              selectedFilter === 'starred'
-                ? 'bg-amber-500/15 text-amber-400 font-bold border-amber-500/40'
-                : 'text-muted-foreground border-transparent hover:text-amber-400'
-            }`}
-          >
-            ⭐ Starred ({Object.keys(userProgress.starred).length})
-          </button>
-          <button
-            onClick={() => setSelectedFilter('wrong')}
-            className={`px-2.5 py-1 rounded border transition-colors ${
-              selectedFilter === 'wrong'
-                ? 'bg-rose-500/15 text-rose-400 font-bold border-rose-500/40'
-                : 'text-muted-foreground border-transparent hover:text-rose-400'
-            }`}
-          >
-            ❌ Review Incorrect
-          </button>
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      {viewMode === 'flashcard' ? (
-        <FlashcardViewer
-          questions={filteredQuestions}
-          userAnswers={userProgress.answers}
-          starred={userProgress.starred}
-          onAnswer={handleSelectAnswer}
-          onToggleStar={handleToggleStar}
-          onResetAttempt={handleResetAttempt}
-        />
-      ) : (
-        <div className="flex flex-col gap-6">
-          {filteredQuestions.length === 0 ? (
-            <div className="p-12 text-center rounded-2xl bg-surface-card border border-border">
-              <p className="text-muted-foreground text-sm font-medium">
-                No questions found matching your filter and search criteria.
-              </p>
-              <button
-                onClick={() => {
-                  setSelectedBank('all');
-                  setSelectedDomain('all');
-                  setSelectedSubdomain('');
-                  setSelectedFilter('all');
-                  setSearchQuery('');
-                }}
-                className="mt-4 px-4 py-2 rounded-md technical-gradient text-white text-xs font-bold"
-              >
-                Reset All Filters
-              </button>
-            </div>
-          ) : (
-            filteredQuestions.map(question => {
-              const qnum = question.question_number;
-              const ansRecord = userProgress.answers[qnum];
-              const isStarred = !!userProgress.starred[qnum];
-
-              return (
-                <QuestionCard
-                  key={qnum}
-                  question={question}
-                  mode="study"
-                  selectedAnswer={ansRecord?.selectedAnswer}
-                  isStarred={isStarred}
-                  onSelectAnswer={letter => handleSelectAnswer(qnum, letter)}
-                  onToggleStar={() => handleToggleStar(qnum)}
-                  onReset={() => handleResetAttempt(qnum)}
+                <BankSelector
+                  selectedBank={selectedBank}
+                  onSelectBank={setSelectedBank}
+                  counts={{
+                    all: questions.length,
+                    certsafari: questions.filter(q => q.source === 'certsafari').length,
+                    examtopics: questions.filter(q => q.source === 'examtopics').length,
+                  }}
                 />
-              );
-            })
-          )}
-        </div>
-      )}
+              </div>
+
+              {/* Domain Pills */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedDomain('all');
+                    setSelectedSubdomain('');
+                  }}
+                  className={`px-3 py-1 rounded border transition-colors whitespace-nowrap ${
+                    selectedDomain === 'all'
+                      ? 'bg-white text-black font-medium border-white'
+                      : 'border-white/10 text-on-surface-variant hover:text-white'
+                  }`}
+                >
+                  All Domains ({questions.length})
+                </button>
+                {DOMAINS.map(d => (
+                  <button
+                    key={d.key}
+                    type="button"
+                    onClick={() => {
+                      setSelectedDomain(d.key);
+                      setSelectedSubdomain('');
+                    }}
+                    className={`px-3 py-1 rounded border transition-colors whitespace-nowrap ${
+                      selectedDomain === d.key
+                        ? 'bg-white text-black font-medium border-white'
+                        : 'border-white/10 text-on-surface-variant hover:text-white'
+                    }`}
+                  >
+                    {d.code} ({d.weightPct}%)
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Questions Feed */}
+            {viewMode === 'flashcard' ? (
+              <FlashcardViewer
+                questions={filteredQuestions}
+                userAnswers={userProgress.answers}
+                starred={userProgress.starred}
+                onAnswer={handleSelectAnswer}
+                onToggleStar={handleToggleStar}
+              />
+            ) : (
+              <div className="flex flex-col gap-6">
+                {pagedQuestions.map(question => (
+                  <QuestionCard
+                    key={question.question_number}
+                    question={question}
+                    mode="study"
+                    selectedAnswer={userProgress.answers[question.question_number]?.selectedAnswer}
+                    isStarred={!!userProgress.starred[question.question_number]}
+                    onSelectAnswer={letter => handleSelectAnswer(question.question_number, letter)}
+                    onToggleStar={() => handleToggleStar(question.question_number)}
+                  />
+                ))}
+
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between pt-4 border-t border-white/[0.08] text-xs font-mono text-on-surface-variant">
+                    <button
+                      type="button"
+                      disabled={page <= 1}
+                      onClick={() => {
+                        setPage(p => p - 1);
+                        window.scrollTo({ top: 600, behavior: 'smooth' });
+                      }}
+                      className="px-3 py-1.5 rounded border border-white/10 hover:border-white/30 disabled:opacity-40"
+                    >
+                      Previous
+                    </button>
+                    <span>
+                      Page {page} of {totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={page >= totalPages}
+                      onClick={() => {
+                        setPage(p => p + 1);
+                        window.scrollTo({ top: 600, behavior: 'smooth' });
+                      }}
+                      className="px-3 py-1.5 rounded border border-white/10 hover:border-white/30 disabled:opacity-40"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        )}
+
+      </div>
     </div>
   );
 }
 
 export default function LearnPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-            <span className="font-mono text-xs text-muted-foreground">Loading Question Bank...</span>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center text-sm text-outline">Loading Catalog...</div>}>
       <LearnPageContent />
     </Suspense>
   );

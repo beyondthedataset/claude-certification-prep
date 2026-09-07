@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { DOMAINS, getSubdomainsByDomain } from '@/lib/questions-data';
 import { DomainKey, UserProgress } from '@/lib/types';
-import { ChevronDown, ChevronUp, Compass, ArrowRight, CheckCircle2, Target } from 'lucide-react';
 
 interface Props {
   userProgress?: UserProgress | null;
@@ -19,31 +18,33 @@ export default function SubdomainMasteryCard({ userProgress, className = '' }: P
   };
 
   return (
-    <div className={`bg-card border border-border rounded-2xl p-6 shadow-sm ${className}`}>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6 pb-4 border-b border-border">
+    <div className={`bg-[#14161D] border border-white/[0.08] rounded-xl p-6 shadow-sm ${className}`}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6 pb-4 border-b border-white/[0.08]">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-primary/10 text-primary">
-              <Compass className="w-5 h-5" />
+            <span className="material-symbols-outlined text-secondary text-[20px]">
+              account_tree
             </span>
-            <h2 className="text-xl font-bold tracking-tight">30 Subdomain Curriculum Mastery</h2>
+            <h2 className="text-base sm:text-lg font-headline font-semibold text-white tracking-tight">
+              30 Subdomain Curriculum Mastery
+            </h2>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Drill into granular task objectives across all 5 official Anthropic CCA-F domains with targeted practice sets.
+          <p className="text-xs text-text-muted mt-1 font-sans">
+            Drill into granular task objectives across all 5 official blueprint domains with targeted scenario practice sets.
           </p>
         </div>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="flex items-center gap-3 text-xs text-text-muted font-mono">
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 30 Target Subdomains
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> 30 Objectives
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-primary"></span> 574 Verified Scenarios
+            <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span> 574 Questions
           </span>
         </div>
       </div>
 
-      <div className="space-y-4">
-        {DOMAINS.map(domain => {
+      <div className="space-y-3">
+        {DOMAINS.map((domain, index) => {
           const isExpanded = expandedDomain === domain.key;
           const subdomains = getSubdomainsByDomain(domain.key);
           const totalSubQuestions = subdomains.reduce((sum, s) => sum + (s.questionCount || 0), 0);
@@ -51,85 +52,85 @@ export default function SubdomainMasteryCard({ userProgress, className = '' }: P
           return (
             <div 
               key={domain.key} 
-              className={`border rounded-xl transition-all duration-200 overflow-hidden ${
-                isExpanded ? 'border-primary/40 bg-muted/20 shadow-sm' : 'border-border bg-card hover:border-border/80'
+              className={`border rounded-lg transition-all duration-200 overflow-hidden ${
+                isExpanded ? 'border-white/[0.18] bg-[#0D0E12]' : 'border-white/[0.06] bg-[#14161D] hover:border-white/[0.12]'
               }`}
             >
-              {/* Domain Header Header */}
+              {/* Domain Header */}
               <button
                 type="button"
                 onClick={() => toggleDomain(domain.key)}
-                className="w-full px-5 py-4 flex items-center justify-between gap-4 text-left transition-colors"
+                className="w-full px-5 py-3.5 flex items-center justify-between gap-4 text-left transition-colors"
               >
                 <div className="flex items-center gap-3.5 min-w-0">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0 ${
-                    isExpanded ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
+                  <div className={`w-8 h-8 rounded flex items-center justify-center font-mono font-medium text-xs flex-shrink-0 ${
+                    isExpanded ? 'bg-white text-black' : 'bg-[#1C202B] text-text-muted'
                   }`}>
-                    {domain.code.replace('Domain ', 'D')}
+                    0{index + 1}
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-sm sm:text-base text-foreground leading-snug">
+                      <h3 className="font-medium text-sm text-white leading-snug">
                         {domain.name}
                       </h3>
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-medium">
-                        {domain.weightPct}% Exam Weight
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/[0.06] text-secondary border border-secondary/20">
+                        {domain.weightPct}% weight
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
-                      {subdomains.length} Subdomains • {totalSubQuestions} Targeted Practice Questions
+                    <p className="text-xs text-text-muted truncate mt-0.5 font-sans">
+                      {subdomains.length} Subdomains • {totalSubQuestions} Practice Scenarios
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3 flex-shrink-0">
-                  <span className="text-xs font-semibold text-primary hidden sm:inline-block">
-                    {isExpanded ? 'Collapse' : 'Explore Subdomains'}
+                  <span className="text-xs text-text-muted hidden sm:inline-block font-mono">
+                    {isExpanded ? 'Collapse' : 'Expand'}
                   </span>
-                  <div className="p-1 rounded-md text-muted-foreground hover:text-foreground">
-                    {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                  </div>
+                  <span className="material-symbols-outlined text-text-subtle text-[18px]">
+                    {isExpanded ? 'expand_less' : 'expand_more'}
+                  </span>
                 </div>
               </button>
 
               {/* Subdomains Grid */}
               {isExpanded && (
-                <div className="px-5 pb-5 pt-1 border-t border-border/50">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                <div className="px-5 pb-5 pt-1 border-t border-white/[0.06]">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 mt-3">
                     {subdomains.map(sub => {
                       return (
                         <div 
                           key={sub.code}
-                          className="flex flex-col justify-between p-3.5 rounded-xl border border-border/70 bg-card hover:border-primary/30 transition-all group"
+                          className="flex flex-col justify-between p-3 rounded-lg border border-white/[0.06] bg-[#14161D] hover:border-white/20 transition-all"
                         >
                           <div className="flex items-start justify-between gap-2.5 mb-2">
                             <div className="flex items-center gap-2">
-                              <span className="px-2 py-0.5 rounded-md bg-muted text-xs font-mono font-bold text-primary">
+                              <span className="px-1.5 py-0.5 rounded bg-[#0D0E12] text-[11px] font-mono font-medium text-secondary border border-secondary/20">
                                 {sub.code}
                               </span>
-                              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                <Target className="w-3 h-3 text-muted-foreground" />
-                                {sub.questionCount || 0} questions
+                              <span className="text-xs text-text-subtle font-mono">
+                                {sub.questionCount || 0} items
                               </span>
                             </div>
                             <Link
                               href={`/learn?domain=${domain.key}&subdomain=${sub.code}`}
-                              className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform"
+                              className="text-xs font-medium text-white hover:text-secondary inline-flex items-center gap-1 transition-colors"
                             >
-                              Drill <ArrowRight className="w-3 h-3" />
+                              <span>Drill</span>
+                              <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
                             </Link>
                           </div>
 
-                          <h4 className="text-xs sm:text-sm font-medium text-foreground leading-snug line-clamp-2 mb-3">
+                          <h4 className="text-xs font-normal text-text-primary leading-snug line-clamp-2 mb-2 font-sans">
                             {sub.title}
                           </h4>
 
-                          <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[11px] text-muted-foreground">
+                          <div className="pt-2 border-t border-white/[0.04] flex items-center justify-between text-[11px] text-text-subtle font-mono">
                             <span className="flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                              Scenario-based
+                              <span className="material-symbols-outlined text-[12px] text-emerald-400">check_circle</span>
+                              Verified Pattern
                             </span>
-                            <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                            <span className="uppercase text-[10px]">
                               {domain.code}
                             </span>
                           </div>

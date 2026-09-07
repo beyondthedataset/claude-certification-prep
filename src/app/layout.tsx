@@ -4,18 +4,19 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: 'Claude Certification Guide — Free Mock Exams & Study Guides',
-  description: 'Exam-realistic mock exams, 574 verified practice questions across 2 question banks, 30 official subdomains, scoring, and study guides for Anthropic Claude Certified Architect (Foundations) CCAR-F.',
+  title: 'CertPulse — Precision AI & Cloud Certification Platform',
+  description: 'Adaptive scenarios, architecture diagnostics, and predictive telemetry calibrated to official AWS, Azure, GCP, and Anthropic examination standards.',
   keywords: [
-    'Claude certification',
+    'CertPulse',
+    'AWS Solutions Architect',
+    'SAA-C03',
+    'Azure AI Engineer',
+    'AI-102',
     'Claude Certified Architect',
-    'Claude mock exam',
     'CCA-F',
-    'CCAR-F',
-    'Anthropic certification',
+    'Google Cloud Architect',
+    'Cloud certification mock exam',
     'Model Context Protocol',
-    'MCP servers',
-    'Prompt engineering Claude',
   ],
 };
 
@@ -30,11 +31,15 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Hanken+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+          rel="stylesheet"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
           rel="stylesheet"
         />
       </head>
-      <body className="bg-background text-foreground antialiased min-h-screen flex flex-col selection:bg-primary/20 selection:text-primary">
+      <body className="bg-background text-on-surface antialiased min-h-screen flex flex-col selection:bg-white/10 selection:text-white">
         <Navbar />
         <main className="flex-1">
           {children}
