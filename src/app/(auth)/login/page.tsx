@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogIn, UserPlus, Key, ShieldCheck, User } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,11 +37,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleQuickLogin = (demoUser: string) => {
-    setUsername(demoUser);
-    setPassword('claude2026');
-  };
-
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md p-8 rounded-2xl bg-surface-card border border-border shadow-card border-l-2 border-l-primary flex flex-col gap-6">
@@ -74,7 +69,7 @@ export default function LoginPage() {
                 required
                 value={username}
                 onChange={e => setUsername(e.target.value)}
-                placeholder="e.g. alex or admin"
+                placeholder="Enter your username"
                 className="w-full px-3.5 py-2.5 rounded-lg bg-surface-lowest border border-border text-foreground text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/40 font-mono transition-all"
               />
             </div>
@@ -110,19 +105,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Quick Admin Access */}
-        <div className="pt-4 border-t border-border/40 text-center">
-          <button
-            type="button"
-            onClick={() => handleQuickLogin('admin')}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-surface-high hover:bg-surface-container border border-border text-2xs font-mono text-foreground hover:text-primary transition-colors"
-          >
-            <ShieldCheck className="h-3.5 w-3.5 text-primary" />
-            <span>Fill Admin Credentials</span>
-          </button>
-        </div>
-
-        <div className="text-center text-xs text-muted-foreground">
+        <div className="pt-2 text-center text-xs text-muted-foreground">
           Don't have an account yet?{' '}
           <a href="/signup" className="text-primary font-semibold hover:underline">
             Register New Member
