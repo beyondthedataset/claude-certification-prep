@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Clock, AlertCircle } from 'lucide-react';
 import { formatTime } from '@/lib/utils';
 
 interface Props {
@@ -40,20 +39,20 @@ export default function ExamTimer({ initialSeconds, onTimeUp, onTick }: Props) {
 
   return (
     <div
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono text-xs font-bold transition-all shadow-sm ${
+      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono text-xs font-semibold transition-all shadow-sm ${
         isCritical
-          ? 'bg-rose-500/20 text-rose-400 border-rose-500/50 animate-pulse'
+          ? 'bg-rose-500/15 text-rose-300 border-rose-500/40 animate-pulse'
           : isWarning
-          ? 'bg-amber-500/15 text-amber-400 border-amber-500/40'
-          : 'bg-surface-high text-foreground border-border'
+          ? 'bg-amber-400/15 text-amber-300 border-amber-400/30'
+          : 'bg-[#14161D] text-white border-white/[0.08]'
       }`}
       title="Exam Countdown Timer"
     >
-      {isCritical ? (
-        <AlertCircle className="h-4 w-4 text-rose-400 animate-spin" />
-      ) : (
-        <Clock className={`h-4 w-4 ${isWarning ? 'text-amber-400' : 'text-primary'}`} />
-      )}
+      <span className={`material-symbols-outlined text-[15px] ${
+        isCritical ? 'text-rose-400' : isWarning ? 'text-amber-400' : 'text-secondary'
+      }`}>
+        {isCritical ? 'warning' : 'timer'}
+      </span>
       <span>{formatTime(remaining)}</span>
     </div>
   );

@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { Question } from '@/lib/types';
 import QuestionCard from './QuestionCard';
-import { ArrowLeft, ArrowRight, Shuffle, RotateCcw } from 'lucide-react';
 
 interface Props {
   questions: Question[];
@@ -27,8 +26,8 @@ export default function FlashcardViewer({
   const total = questions.length;
   if (total === 0) {
     return (
-      <div className="p-8 text-center rounded-xl bg-surface-card border border-border">
-        <p className="text-muted-foreground text-sm">No questions available matching current filters.</p>
+      <div className="p-8 text-center rounded-xl bg-[#14161D] border border-white/[0.08]">
+        <p className="text-text-muted text-sm font-sans">No questions available matching current filters.</p>
       </div>
     );
   }
@@ -83,44 +82,50 @@ export default function FlashcardViewer({
 
   return (
     <div className="flex flex-col gap-4 max-w-4xl mx-auto w-full">
-      {/* Top Toolbar */}
-      <div className="flex items-center justify-between p-3.5 rounded-xl bg-surface-card border border-border shadow-sm flex-wrap gap-3">
-        <div className="flex items-center gap-3 flex-1 min-w-[200px]">
-          <div className="flex-1 h-2 rounded-full bg-surface-lowest overflow-hidden border border-border">
+      {/* Top Precision Toolbar */}
+      <div className="flex items-center justify-between p-4 rounded-xl bg-[#14161D] border border-white/[0.08] shadow-sm flex-wrap gap-4">
+        <div className="flex items-center gap-3.5 flex-1 min-w-[220px]">
+          {/* 2px Hairline Progress Track (Atelier Obsidian standard) */}
+          <div className="flex-1 h-1.5 rounded-full bg-[#1E222D] overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-primary to-orange-400 transition-all duration-300"
+              className="h-full bg-white transition-all duration-300"
               style={{ width: `${progressPct}%` }}
             />
           </div>
-          <span className="font-mono text-xs font-bold text-foreground shrink-0">
-            {safeIndex + 1} of {total} ({progressPct}%)
+          <span className="font-mono text-xs text-text-muted shrink-0">
+            <span className="text-white font-medium">{safeIndex + 1}</span> / {total} ({progressPct}%)
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={handlePrev}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-surface-high hover:bg-surface-container border border-border text-xs font-semibold text-foreground transition-colors"
+            type="button"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#0D0E12] hover:bg-[#1C202B] border border-white/[0.08] text-xs font-medium text-text-primary hover:text-white transition-colors"
             title="Previous (Left Arrow / K)"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <span className="material-symbols-outlined text-[15px]">arrow_back</span>
             <span>Prev</span>
           </button>
+
           <button
             onClick={handleRandom}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-surface-high hover:bg-surface-container border border-border text-xs font-semibold text-foreground transition-colors"
+            type="button"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#0D0E12] hover:bg-[#1C202B] border border-white/[0.08] text-xs font-medium text-text-primary hover:text-white transition-colors"
             title="Random Question"
           >
-            <Shuffle className="h-3.5 w-3.5 text-primary" />
+            <span className="material-symbols-outlined text-[15px] text-secondary">shuffle</span>
             <span className="hidden sm:inline">Random</span>
           </button>
+
           <button
             onClick={handleNext}
-            className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-md technical-gradient text-white text-xs font-bold shadow-md shadow-orange-600/20"
+            type="button"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-white hover:bg-[#E2E8F0] text-black text-xs font-medium transition-colors shadow-sm"
             title="Next (Right Arrow / J)"
           >
             <span>Next</span>
-            <ArrowRight className="h-3.5 w-3.5" />
+            <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
           </button>
         </div>
       </div>
@@ -136,9 +141,9 @@ export default function FlashcardViewer({
         onReset={onResetAttempt ? () => onResetAttempt(qnum) : undefined}
       />
 
-      {/* Keyboard guide tip */}
-      <div className="text-center font-mono text-3xs text-muted-foreground">
-        Shortcuts: <kbd className="px-1 py-0.5 rounded bg-surface-card border border-border">1-4</kbd> / <kbd className="px-1 py-0.5 rounded bg-surface-card border border-border">A-D</kbd> Select Answer · <kbd className="px-1 py-0.5 rounded bg-surface-card border border-border">← / →</kbd> Prev / Next · <kbd className="px-1 py-0.5 rounded bg-surface-card border border-border">S</kbd> Star
+      {/* Keyboard Shortcuts Hint Bar */}
+      <div className="text-center font-mono text-[11px] text-text-subtle py-1">
+        Shortcuts: <kbd className="px-1.5 py-0.5 rounded bg-[#0D0E12] border border-white/[0.08] text-white text-[10px]">1-4</kbd> / <kbd className="px-1.5 py-0.5 rounded bg-[#0D0E12] border border-white/[0.08] text-white text-[10px]">A-D</kbd> Select Answer · <kbd className="px-1.5 py-0.5 rounded bg-[#0D0E12] border border-white/[0.08] text-white text-[10px]">← / →</kbd> Prev / Next · <kbd className="px-1.5 py-0.5 rounded bg-[#0D0E12] border border-white/[0.08] text-white text-[10px]">S</kbd> Star
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { DOMAINS, getSubdomainsByDomain } from '@/lib/questions-data';
+import { DOMAINS, getSubdomainsByDomain, QUESTIONS_DATA } from '@/lib/questions-data';
 import { DomainKey, UserProgress } from '@/lib/types';
 
 interface Props {
@@ -98,6 +98,15 @@ export default function SubdomainMasteryCard({ userProgress, className = '' }: P
                 <div className="px-5 pb-5 pt-1 border-t border-white/[0.06]">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 mt-3">
                     {subdomains.map(sub => {
+                      const subQuestions = QUESTIONS_DATA.filter(q => q.subdomain && q.subdomain.includes(sub.code));
+                      const subAnswers = subQuestions
+                        .map(q => userProgress?.answers[q.question_number])
+                        .filter((a): a is NonNullable<typeof a> => !!a);
+                      const subPracticed = subAnswers.length;
+                      const subCorrect = subAnswers.filter(a => a.isCorrect).length;
+                      const subAccuracy = subPracticed > 0 ? Math.round((subCorrect / subPracticed) * 100) : 0;
+                      const totalCount = sub.questionCount || subQuestions.length;
+
                       return (
                         <div 
                           key={sub.code}
@@ -108,9 +117,15 @@ export default function SubdomainMasteryCard({ userProgress, className = '' }: P
                               <span className="px-1.5 py-0.5 rounded bg-[#0D0E12] text-[11px] font-mono font-medium text-secondary border border-secondary/20">
                                 {sub.code}
                               </span>
-                              <span className="text-xs text-text-subtle font-mono">
-                                {sub.questionCount || 0} items
-                              </span>
+                              {subPracticed > 0 ? (
+                                <span className="text-[11px] font-mono font-medium text-emerald-400">
+                                  {subAccuracy}% Acc ({subPracticed}/{totalCount})
+                                </span>
+                              ) : (
+                                <span className="text-xs text-text-subtle font-mono">
+                                  {totalCount} items
+                                </span>
+                              )}
                             </div>
                             <Link
                               href={`/learn?domain=${domain.key}&subdomain=${sub.code}`}
@@ -127,8 +142,14 @@ export default function SubdomainMasteryCard({ userProgress, className = '' }: P
 
                           <div className="pt-2 border-t border-white/[0.04] flex items-center justify-between text-[11px] text-text-subtle font-mono">
                             <span className="flex items-center gap-1">
-                              <span className="material-symbols-outlined text-[12px] text-emerald-400">check_circle</span>
-                              Verified Pattern
+                              {subPracticed > 0 ? (
+                                <>
+                                  <span className="material-symbols-outlined text-[12px] text-emerald-400">check_circle</span>
+                                  <span>{subCorrect} of {subPracticed} correct</span>
+                                </>
+                              ) : (
+                                <span className="text-outline">Unassessed</span>
+                              )}
                             </span>
                             <span className="uppercase text-[10px]">
                               {domain.code}
@@ -147,3 +168,4 @@ export default function SubdomainMasteryCard({ userProgress, className = '' }: P
     </div>
   );
 }
+

@@ -9,7 +9,6 @@ import BankSelector from '@/components/BankSelector';
 export default function MockExamHubPage() {
   const router = useRouter();
   const [selectedBank, setSelectedBank] = useState<QuestionBank>('all');
-  const [activeTrack, setActiveTrack] = useState<'cca' | 'aws' | 'azure'>('cca');
 
   const handleStartExam = (type: 'full' | 'quick' | 'domain', domainKey?: string) => {
     let url = `/mock-exam/session?type=${type}&bank=${selectedBank}`;
@@ -44,42 +43,15 @@ export default function MockExamHubPage() {
               Exam Simulation Engine
             </h1>
             <p className="text-sm text-text-muted mt-1 max-w-2xl font-sans leading-relaxed">
-              Test under strict vendor exam pacing with timed countdowns, multi-domain weighted scenario questions, option elimination tools, and instantaneous diagnostic audit reports.
+              Test under strict Anthropic CCA-F exam pacing with 120-min timed countdowns, multi-domain weighted scenario questions, option elimination tools, and instantaneous diagnostic audit reports.
             </p>
           </div>
 
-          {/* Track Switcher */}
-          <div className="flex items-center p-1 rounded-lg bg-[#14161D] border border-white/[0.08] self-start md:self-auto shrink-0">
-            <button
-              onClick={() => setActiveTrack('cca')}
-              className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
-                activeTrack === 'cca'
-                  ? 'bg-white text-black font-semibold shadow-sm'
-                  : 'text-text-muted hover:text-white'
-              }`}
-            >
-              Claude CCA-F
-            </button>
-            <button
-              onClick={() => setActiveTrack('aws')}
-              className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
-                activeTrack === 'aws'
-                  ? 'bg-white text-black font-semibold shadow-sm'
-                  : 'text-text-muted hover:text-white'
-              }`}
-            >
-              AWS SAA-C03
-            </button>
-            <button
-              onClick={() => setActiveTrack('azure')}
-              className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
-                activeTrack === 'azure'
-                  ? 'bg-white text-black font-semibold shadow-sm'
-                  : 'text-text-muted hover:text-white'
-              }`}
-            >
-              Azure AI-102
-            </button>
+          {/* Active Specification Pill */}
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#14161D] border border-white/[0.08] text-xs font-medium text-white self-start md:self-auto shrink-0 shadow-sm">
+            <span className="material-symbols-outlined text-[16px] text-secondary">terminal</span>
+            <span>Claude Certified Architect (CCA-F)</span>
+            <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono border border-emerald-500/20">574 Scenarios</span>
           </div>
         </div>
       </div>

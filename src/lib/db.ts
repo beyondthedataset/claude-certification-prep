@@ -418,3 +418,64 @@ export async function getTeamLeaderboard(): Promise<TeamMemberStats[]> {
 
   return statsList.sort((a, b) => b.readinessPct - a.readinessPct);
 }
+
+export interface RecentCompletion {
+  id: string;
+  username: string;
+  fullName: string;
+  examType: string;
+  scorePct: number;
+  passed: boolean;
+  completedAt: string;
+}
+
+export interface CohortSummary {
+  totalCandidates: number;
+  totalQuestionsPracticed: number;
+  totalMocksCompleted: number;
+}
+
+export async function getRecentExamCompletions(limit = 5): Promise<RecentCompletion[]> {
+  await initDatabase();
+  const db = getClient();
+  const res = await db.execute({
+    sql: `
+      SELECT e.id, e.examType, e.scorePct, e.passed, e.completedAt, e.startedAt, u.username, u.fullName
+      FROM exam_attempts e
+      JOIN users u ON e.userId = u.id
+      ORDER BY e.startedAt DESC
+      LIMIT ?
+    `,
+    args: [limit],
+  });
+
+  return res.rows.map(r => ({
+    id: String(r.id),
+    username: String(r.username),
+    fullName: String(r.fullName || r.username),
+    examType: String(r.examType),
+    scorePct: Number(r.scorePct),
+    passed: Number(r.passed) === 1,
+    completedAt: String(r.completedAt || r.startedAt),
+  }));
+}
+
+export async function getCohortSummary(): Promise<CohortSummary> {
+  await initDatabase();
+  const db = getClient();
+  const usersRes = await db.execute('SELECT COUNT(*) as count FROM users');
+  const attemptsRes = await db.execute('SELECT COUNT(*) as count FROM exam_attempts');
+  const progressRes = await db.execute('SELECT answers FROM user_progress');
+
+  let totalQuestionsPracticed = 0;
+  for (const row of progressRes.rows) {
+    const answers = JSON.parse(String(row.answers || '{}'));
+    totalQuestionsPracticed += Object.keys(answers).length;
+  }
+
+  return {
+    totalCandidates: Number(usersRes.rows[0]?.count || 0),
+    totalMocksCompleted: Number(attemptsRes.rows[0]?.count || 0),
+    totalQuestionsPracticed,
+  };
+}

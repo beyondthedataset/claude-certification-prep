@@ -4,19 +4,19 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: 'CertPulse — Precision AI & Cloud Certification Platform',
-  description: 'Adaptive scenarios, architecture diagnostics, and predictive telemetry calibrated to official AWS, Azure, GCP, and Anthropic examination standards.',
+  title: 'CertPulse — Claude Certified Architect (CCA-F) Prep Platform',
+  description: '574 verified scenarios, architecture diagnostics, and predictive telemetry calibrated strictly to the Anthropic Claude Certified Architect (CCA-F) examination standard.',
   keywords: [
     'CertPulse',
-    'AWS Solutions Architect',
-    'SAA-C03',
-    'Azure AI Engineer',
-    'AI-102',
     'Claude Certified Architect',
     'CCA-F',
-    'Google Cloud Architect',
-    'Cloud certification mock exam',
+    'Anthropic Claude certification',
     'Model Context Protocol',
+    'Agentic Architecture',
+    'Prompt Engineering',
+    'Prompt Caching',
+    'CertSafari',
+    'ExamTopics',
   ],
 };
 

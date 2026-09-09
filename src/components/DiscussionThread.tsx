@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { DiscussionComment } from '@/lib/types';
-import { MessageSquare, ChevronDown, ChevronUp, ThumbsUp } from 'lucide-react';
 
 interface Props {
   comments: DiscussionComment[];
@@ -15,50 +14,53 @@ export default function DiscussionThread({ comments, questionNumber }: Props) {
   if (!comments || comments.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-2 pt-2 border-t border-border/40">
+    <div className="flex flex-col gap-2.5 pt-3 border-t border-white/[0.08]">
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full p-2.5 rounded-md bg-surface-high/50 hover:bg-surface-high border border-border/50 text-xs font-semibold text-foreground transition-colors"
+        className="flex items-center justify-between w-full px-3.5 py-2 rounded-lg bg-[#0D0E12] hover:bg-[#1C202B] border border-white/[0.08] text-xs font-medium text-white transition-colors"
       >
         <div className="flex items-center gap-2">
-          <MessageSquare className="h-3.5 w-3.5 text-cyan-400" />
-          <span>Practitioner Explanations & Discussions ({comments.length})</span>
+          <span className="material-symbols-outlined text-[15px] text-secondary">forum</span>
+          <span>Practitioner Explanations &amp; Community Debate ({comments.length})</span>
         </div>
-        {isOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+        <span className="material-symbols-outlined text-[16px] text-text-subtle">
+          {isOpen ? 'expand_less' : 'expand_more'}
+        </span>
       </button>
 
       {isOpen && (
-        <div className="flex flex-col gap-3 mt-1">
+        <div className="flex flex-col gap-2.5 mt-1">
           {comments.map((c, i) => (
             <div
               key={i}
-              className="p-3.5 rounded-lg bg-surface-card border border-border/70 flex flex-col gap-2 shadow-sm"
+              className="p-4 rounded-xl bg-[#0D0E12] border border-white/[0.06] flex flex-col gap-2.5 shadow-sm"
             >
-              <div className="flex items-center justify-between flex-wrap gap-2 text-2xs">
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold flex items-center justify-center text-3xs">
+              <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-6 h-6 rounded-full bg-[#1C202B] border border-white/10 text-white font-medium flex items-center justify-center text-[10px] font-mono">
                     {(c.user || 'A').charAt(0).toUpperCase()}
                   </div>
-                  <span className="font-semibold text-foreground">{c.user}</span>
-                  <span className="text-muted-foreground font-mono">{c.date}</span>
+                  <span className="font-medium text-white">{c.user}</span>
+                  <span className="text-text-subtle font-mono text-[11px]">{c.date}</span>
                 </div>
 
                 <div className="flex items-center gap-2">
                   {c.vote && (
-                    <span className="px-1.5 py-0.5 rounded font-mono text-3xs uppercase tracking-wider bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                    <span className="px-2 py-0.5 rounded font-mono text-[10px] uppercase tracking-wider bg-white/[0.06] text-white border border-white/10">
                       Voted {c.vote}
                     </span>
                   )}
                   {c.upvotes > 0 && (
-                    <span className="flex items-center gap-1 px-1.5 py-0.5 rounded font-mono text-3xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                      <ThumbsUp className="h-2.5 w-2.5" />
+                    <span className="flex items-center gap-1 px-2 py-0.5 rounded font-mono text-[10px] bg-secondary/10 text-secondary border border-secondary/20">
+                      <span className="material-symbols-outlined text-[11px]">thumb_up</span>
                       +{c.upvotes}
                     </span>
                   )}
                 </div>
               </div>
 
-              <div className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
+              <div className="text-xs text-text-muted leading-relaxed whitespace-pre-line font-sans">
                 {c.content}
               </div>
             </div>

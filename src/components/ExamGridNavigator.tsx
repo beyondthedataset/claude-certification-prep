@@ -20,10 +20,13 @@ export default function ExamGridNavigator({
   const total = questionNumbers.length;
 
   return (
-    <div className="flex flex-col gap-3 p-4 rounded-xl bg-surface-card border border-border shadow-card">
-      <div className="flex items-center justify-between text-2xs font-mono text-muted-foreground uppercase tracking-wider pb-2 border-b border-border/40">
-        <span>Question Navigator</span>
-        <span className="text-primary font-bold">{answeredCount}/{total} Answered</span>
+    <div className="flex flex-col gap-3 p-5 rounded-xl bg-[#14161D] border border-white/[0.08] shadow-xl">
+      <div className="flex items-center justify-between text-xs font-mono text-text-subtle uppercase tracking-wider pb-3 border-b border-white/[0.08]">
+        <span className="flex items-center gap-1.5 text-white font-medium">
+          <span className="material-symbols-outlined text-[15px] text-secondary">grid_view</span>
+          Question Matrix
+        </span>
+        <span className="text-secondary font-medium">{answeredCount}/{total} Answered</span>
       </div>
 
       {/* Grid */}
@@ -33,21 +36,22 @@ export default function ExamGridNavigator({
           const isAnswered = !!answers[qnum];
           const isFlagged = !!flagged[qnum];
 
-          let cellClass = 'bg-surface-lowest border-border text-muted-foreground hover:bg-surface-high hover:border-primary/40';
+          let cellClass = 'bg-[#0D0E12] border border-white/[0.06] text-text-subtle hover:bg-[#1C202B] hover:text-white hover:border-white/20';
 
           if (isCurrent) {
-            cellClass = 'ring-2 ring-primary bg-primary/20 text-white font-bold border-primary';
+            cellClass = 'bg-white text-black font-semibold border-white ring-1 ring-white/40';
           } else if (isFlagged) {
-            cellClass = 'bg-amber-500/15 border-amber-500/50 text-amber-400 font-bold';
+            cellClass = 'bg-amber-400/15 border border-amber-400/30 text-amber-300 font-medium';
           } else if (isAnswered) {
-            cellClass = 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 font-semibold';
+            cellClass = 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-medium';
           }
 
           return (
             <button
               key={qnum}
               onClick={() => onSelectIndex(idx)}
-              className={`aspect-square rounded flex items-center justify-center font-mono text-2xs transition-all ${cellClass}`}
+              type="button"
+              className={`aspect-square rounded flex items-center justify-center font-mono text-xs transition-all ${cellClass}`}
               title={`Question ${idx + 1} (Exam Q#${qnum})`}
             >
               {idx + 1}
@@ -57,18 +61,18 @@ export default function ExamGridNavigator({
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-border/40 text-3xs font-mono text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-white/[0.08] text-[11px] font-mono text-text-muted">
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded bg-emerald-500/40 border border-emerald-500" />
+          <span className="w-2 h-2 rounded-full bg-emerald-400" />
           <span>Answered</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded bg-amber-500/40 border border-amber-500" />
+          <span className="w-2 h-2 rounded-full bg-amber-400" />
           <span>Flagged ({flaggedCount})</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded bg-surface-lowest border border-border" />
-          <span>Unanswered</span>
+          <span className="w-2 h-2 rounded-full bg-[#1E222D]" />
+          <span>Remaining</span>
         </div>
       </div>
     </div>
